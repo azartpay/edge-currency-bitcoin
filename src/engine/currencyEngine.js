@@ -88,9 +88,9 @@ export class CurrencyEngine {
       )
     }
     console.log(
-      `${this.walletId} - Created Wallet Type ${
+      `${this.walletId.slice(0, 6)}: create engine type: ${
         this.walletInfo.type
-      } for Currency Plugin ${this.currencyInfo.pluginName}`
+      } plugin: ${this.currencyInfo.pluginName}`
     )
   }
 
@@ -307,7 +307,7 @@ export class CurrencyEngine {
         }
       }
     } catch (err) {
-      console.log(`${this.walletId} - ${err.toString()}`)
+      console.log(`${this.walletId.slice(0, 6)} - ${err.toString()}`)
     }
   }
 
@@ -390,7 +390,7 @@ export class CurrencyEngine {
     const jsonObj = abcTransaction.otherParams.bcoinTx.getJSON(this.network)
     log += JSON.stringify(jsonObj, null, 2) + '\n'
     log += '------------------------------------------------------------------'
-    console.log(`${this.walletId} - ${log}`)
+    console.log(`${this.walletId.slice(0, 6)}: ${log}`)
   }
   // ------------------------------------------------------------------------
   // Public API
@@ -492,7 +492,7 @@ export class CurrencyEngine {
         this.engineState.markAddressesUsed(scriptHashs)
         if (this.keyManager) this.keyManager.setLookAhead()
       })
-      .catch(e => console.log(`${this.walletId} - ${e.toString()}`))
+      .catch(e => console.log(`${this.walletId.slice(0, 6)}: ${e.toString()}`))
   }
 
   isAddressUsed (address: string, options: any): boolean {

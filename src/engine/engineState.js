@@ -223,9 +223,9 @@ export class EngineState extends EventEmitter {
     try {
       const json = JSON.stringify({ keys: keys })
       await this.encryptedLocalFolder.file('keys.json').setText(json)
-      console.log(`${this.walletId} - Saved keys cache`)
+      console.log(`${this.walletId.slice(0, 6)}: Saved keys cache`)
     } catch (e) {
-      console.log(`${this.walletId} - ${e.toString()}`)
+      console.log(`${this.walletId.slice(0, 6)}: ${e.toString()}`)
     }
   }
 
@@ -238,7 +238,7 @@ export class EngineState extends EventEmitter {
       // TODO: Validate JSON
       return keysCacheJson.keys
     } catch (e) {
-      console.log(`${this.walletId} - ${e.toString()}`)
+      console.log(`${this.walletId.slice(0, 6)}: ${e.toString()}`)
       return {}
     }
   }
@@ -261,7 +261,7 @@ export class EngineState extends EventEmitter {
         rawTx,
         (txid: string) => {
           console.log(
-            `${this.walletId} - Stratum broadcasted transaction ${txid}`
+            `${this.walletId.slice(0, 6)}: broadcastTx success: ${txid}`
           )
           // We resolve if any server succeeds:
           if (!resolved) {
@@ -275,8 +275,8 @@ export class EngineState extends EventEmitter {
             const msg = e ? `With error ${e.toString()}` : ''
             console.log(
               `${
-                this.walletId
-              } - Stratum failed to broadcast transaction: ${rawTx}\n${msg}}`
+                this.walletId.slice(0, 6)
+              } broadcastTx fail: ${rawTx}\n${msg}}`
             )
             reject(e)
           }
@@ -456,8 +456,8 @@ export class EngineState extends EventEmitter {
     const servers = this.pluginState.getServers(NEW_CONNECTIONS, ignorePatterns)
     console.log(
       `${
-        this.walletId
-      } - Refilling Servers, top ${NEW_CONNECTIONS} servers are:`,
+        this.walletId.slice(0, 6)
+      }: getServers: Top ${NEW_CONNECTIONS} servers:`,
       servers
     )
     let chanceToBePicked = 1.25
@@ -476,16 +476,16 @@ export class EngineState extends EventEmitter {
         this.reconnect()
         break
       }
-      const prefix = `${this.walletId} - Stratum ${uri} `
+      const prefix = `${this.walletId.slice(0, 6)} ${uri.replace('electrum://', '')}:`
       const callbacks: StratumCallbacks = {
         onOpen: () => {
           this.reconnectCounter = 0
-          console.log(`${this.walletId} - Connected to ${uri}`)
+          console.log(`${prefix} ** Connected **`)
         },
         onClose: (error?: Error) => {
           delete this.connections[uri]
-          const msg = error ? ` with error ${error.message}` : ''
-          console.log(`${prefix}was closed${msg}`)
+          const msg = error ? ` !! Connection ERROR !! ${error.message}` : ''
+          console.log(`${prefix} onClose ${msg}`)
           this.emit('connectionClose', uri)
           error && this.pluginState.serverScoreDown(uri)
           this.reconnect()
@@ -494,31 +494,25 @@ export class EngineState extends EventEmitter {
         },
 
         onQueueSpace: () => {
-          const start = Date.now()
           const task = this.pickNextTask(uri)
           const taskMessage = task
-            ? `${task.method} with params: ${task.params.toString()}`
-            : 'No task Has been Picked'
-          console.log(
-            `${
-              this.walletId
-            } - Picked task: ${taskMessage}, for uri ${uri}, in: - ${Date.now() -
-              start}ms`
-          )
+            ? `${task.method} params: ${task.params.toString()}`
+            : 'no task'
+          console.log(`${prefix} nextTask: ${taskMessage}`)
           return task
         },
         onTimer: (queryTime: number) => {
-          console.log(`${prefix}was pinged`)
+          console.log(`${prefix} returned version in ${queryTime}ms`)
           this.pluginState.serverScoreUp(uri, Date.now() - queryTime)
         },
         onNotifyHeader: (headerInfo: StratumBlockHeader) => {
-          console.log(`${prefix}notified header ${headerInfo.block_height}`)
+          console.log(`${prefix} returned height: ${headerInfo.block_height}`)
           this.serverStates[uri].height = headerInfo.block_height
           this.pluginState.updateHeight(headerInfo.block_height)
         },
 
         onNotifyScriptHash: (scriptHash: string, hash: string) => {
-          console.log(`${prefix}notified scripthash ${scriptHash} change`)
+          console.log(`${prefix} notified scripthash change: ${scriptHash}`)
           const addressState = this.serverStates[uri].addresses[scriptHash]
           addressState.hash = hash
           addressState.lastUpdate = Date.now()
@@ -546,7 +540,7 @@ export class EngineState extends EventEmitter {
 
   pickNextTask (uri: string): StratumTask | void {
     const serverState = this.serverStates[uri]
-    const prefix = `${this.walletId} - Stratum ${uri} `
+    const prefix = `${this.walletId.slice(0, 6)} ${uri.replace('electrum://', '')}:`
 
     // Check the version if we haven't done that already:
     if (serverState.version === void 0 && !serverState.fetchingVersion) {
@@ -554,7 +548,7 @@ export class EngineState extends EventEmitter {
       const queryTime = Date.now()
       return fetchVersion(
         (version: string) => {
-          console.log(`${prefix}received version ${version}`)
+          console.log(`${prefix} received version ${version}`)
           serverState.fetchingVersion = false
           serverState.version = version
           this.pluginState.serverScoreUp(uri, Date.now() - queryTime)
@@ -572,7 +566,7 @@ export class EngineState extends EventEmitter {
       const queryTime = Date.now()
       return subscribeHeight(
         (height: number) => {
-          console.log(`${prefix}received height ${height}`)
+          console.log(`${prefix} received height ${height}`)
           serverState.fetchingHeight = false
           serverState.height = height
           this.pluginState.updateHeight(height)
@@ -608,7 +602,7 @@ export class EngineState extends EventEmitter {
         return fetchBlockHeader(
           parseInt(height),
           (header: any) => {
-            console.log(`${prefix}received header for block number ${height}`)
+            console.log(`${prefix} received header for block number ${height}`)
             this.fetchingHeaders[height] = false
             this.pluginState.serverScoreUp(uri, Date.now() - queryTime)
             this.handleHeaderFetch(height, header)
@@ -637,7 +631,7 @@ export class EngineState extends EventEmitter {
         return fetchTransaction(
           txid,
           (txData: string) => {
-            console.log(`${prefix}received tx ${txid}`)
+            console.log(`${prefix} ** RECEIVED TX ** ${txid}`)
             this.pluginState.serverScoreUp(uri, Date.now() - queryTime)
             this.fetchingTxs[txid] = false
             this.handleTxFetch(txid, txData)
@@ -669,7 +663,7 @@ export class EngineState extends EventEmitter {
         return fetchScriptHashUtxo(
           address,
           (utxos: Array<StratumUtxo>) => {
-            console.log(`${prefix}received utxos for ${address}`)
+            console.log(`${prefix} received utxos for: ${address}`)
             addressState.fetchingUtxos = false
             if (!addressState.hash) {
               throw new Error(
@@ -681,7 +675,7 @@ export class EngineState extends EventEmitter {
           },
           (e?: Error) => {
             addressState.fetchingUtxos = false
-            this.onConnectionClose(uri, `fetching utxos for ${address}`, e)
+            this.onConnectionClose(uri, `fetching utxos for: ${address}`, e)
           }
         )
       }
@@ -705,7 +699,7 @@ export class EngineState extends EventEmitter {
           address,
           (hash: string | null) => {
             console.log(
-              `${prefix}subscribed to ${address} at ${hash || 'null'}`
+              `${prefix} subscribed to ${address} at ${hash ? hash.slice(0, 6) : 'null'}`
             )
             addressState.subscribing = false
             addressState.subscribed = true
@@ -719,7 +713,7 @@ export class EngineState extends EventEmitter {
           },
           (e?: Error) => {
             addressState.subscribing = false
-            this.onConnectionClose(uri, `subscribing to address ${address}`, e)
+            this.onConnectionClose(uri, `subscribing to ${address}`, e)
           }
         )
       }
@@ -763,7 +757,7 @@ export class EngineState extends EventEmitter {
   }
 
   async load () {
-    console.log(`${this.walletId} - Loading wallet engine caches`)
+    console.log(`${this.walletId.slice(0, 6)} - Loading wallet engine caches`)
 
     // Load transaction data cache:
     try {
@@ -851,10 +845,10 @@ export class EngineState extends EventEmitter {
           heights: this.txHeightCache
         })
         await this.localFolder.file('addresses.json').setText(json)
-        console.log(`${this.walletId} - Saved address cache`)
+        console.log(`${this.walletId.slice(0, 6)} - Saved address cache`)
         this.addressCacheDirty = false
       } catch (e) {
-        console.log(`${this.walletId} - saveAddressCache - ${e.toString()}`)
+        console.log(`${this.walletId.slice(0, 6)} - saveAddressCache - ${e.toString()}`)
       }
     }
   }
@@ -864,10 +858,10 @@ export class EngineState extends EventEmitter {
       try {
         const json = JSON.stringify({ txs: this.txCache })
         await this.localFolder.file('txs.json').setText(json)
-        console.log(`${this.walletId} - Saved tx cache`)
+        console.log(`${this.walletId.slice(0, 6)}: Saved txCache`)
         this.txCacheDirty = false
       } catch (e) {
-        console.log(`${this.walletId} - saveTxCache - ${e.toString()}`)
+        console.log(`${this.walletId.slice(0, 6)}: Error saving txCache: ${e.toString()}`)
       }
     }
   }
@@ -1158,8 +1152,8 @@ export class EngineState extends EventEmitter {
   }
 
   onConnectionClose (uri: string, task: string, e?: Error) {
-    const msg = e ? `failed with message "${e.message}"` : `was closed`
-    console.log(`${this.walletId} - Stratum ${uri} ${msg} while ${task}`)
+    const msg = e ? `connection closed ERROR: ${e.message}` : `closed no error`
+    console.log(`${this.walletId.slice(0, 6)}: ${uri.replace('electrum://', '')}: ${msg}: task: ${task}`)
     if (this.connections[uri]) {
       this.connections[uri].close(e)
     }
