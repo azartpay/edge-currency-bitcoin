@@ -2,7 +2,7 @@
 import type {
   EdgeTransaction,
   AbcWalletInfo,
-  AbcCurrencyEngine,
+  // AbcCurrencyEngine,
   AbcCurrencyEngineOptions,
   AbcFreshAddress,
   AbcSpendInfo,
@@ -62,8 +62,8 @@ export class CurrencyEngine {
     options: AbcCurrencyEngineOptions
   ) {
     // Validate that we are a valid AbcCurrencyEngine:
-    // eslint-disable-next-line no-unused-vars
-    const test: AbcCurrencyEngine = this
+    // // eslint-disable-next-line no-unused-vars
+    // const test: AbcCurrencyEngine = this
 
     this.walletInfo = walletInfo
     this.walletId = walletInfo.id || ''
@@ -108,7 +108,8 @@ export class CurrencyEngine {
         ])
       },
       onAddressesChecked: this.abcCurrencyEngineOptions.callbacks
-        .onAddressesChecked
+        .onAddressesChecked,
+      onTxidsChanged: this.abcCurrencyEngineOptions.callbacks.onTxidsChanged
     }
     const gapLimit = this.currencyInfo.defaultSettings.gapLimit
     const io = this.abcCurrencyEngineOptions.optionalSettings
@@ -440,6 +441,10 @@ export class CurrencyEngine {
     return this.engineState.getNumTransactions(options)
   }
 
+  getTxids (): { [txid: string]: { height: number, firstSeen: number } } {
+    return this.engineState.getTxids()
+  }
+
   async getTransactions (options: any): Promise<Array<AbcTransaction>> {
     const rawTxs = this.engineState.txCache
     const abcTransactions = []
@@ -539,6 +544,7 @@ export class CurrencyEngine {
 
     await this.engineState.load()
 
+    // $FlowFixMe
     for (const key of privateKeys) {
       const privKey = bcoin.primitives.KeyRing.fromSecret(key, this.network)
       const keyAddress = privKey.getAddress('base58')

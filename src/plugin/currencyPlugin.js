@@ -102,6 +102,7 @@ export class CurrencyPlugin {
       options
     )
     await engine.load()
+    // $FlowFixMe
     return engine
   }
 
