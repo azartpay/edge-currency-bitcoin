@@ -1,6 +1,7 @@
 // @flow
 // $FlowFixMe
 import buffer from 'buffer-hack'
+import wifsmartcash from 'wif-smart'
 import {
   utils,
   hd,
@@ -73,17 +74,27 @@ export const keysFromEntropy = (
   }
 }
 
+export const vefiryWIFSmartcash = (data: any) => {
+  const wif = wifsmartcash.decode(data, 191)
+  return wif.version === 191
+}
+
 export const verifyWIF = (data: any, network: string) => {
-  const base58 = utils.base58
-  const br = new utils.BufferReader(base58.decode(data), true)
-  const version = br.readU8()
-  network = Network.fromWIF(version, network)
-  br.readBytes(32)
-  if (br.left() > 4 && br.readU8() !== 1) {
-    throw new Error('Bad compression flag.')
+  switch (network) {
+    case 'smartcash':
+      return vefiryWIFSmartcash(data)
+    default:
+      const base58 = utils.base58
+      const br = new utils.BufferReader(base58.decode(data), true)
+      const version = br.readU8()
+      network = Network.fromWIF(version, network)
+      br.readBytes(32)
+      if (br.left() > 4 && br.readU8() !== 1) {
+        throw new Error('Bad compression flag.')
+      }
+      br.verifyChecksum()
+      return true
   }
-  br.verifyChecksum()
-  return true
 }
 
 export const setKeyType = (

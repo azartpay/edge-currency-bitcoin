@@ -82,6 +82,8 @@
     "rollup-plugin-babel": "^4.0.1",
     "rollup-plugin-json": "^3.0.0",
     "rollup-plugin-multi-entry": "^2.0.2",
+    "smartcashjs-lib": "^3.3.4",
+    "wif-smart": "^2.0.0",
     "rollup-plugin-node-resolve": "^3.4.0",
     "source-map-support": "^0.5.9",
     "updot": "^1.1.7"
