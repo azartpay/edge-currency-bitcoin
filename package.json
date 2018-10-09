@@ -19,7 +19,7 @@
   "module": "./lib/index.es.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/EdgeApp/edge-currency-bitcoin.git"
+    "url": "git://github.com/azartpay/edge-currency-bitcoin.git"
   },
   "scripts": {
     "build": "rollup -c && flow-copy-source src lib && npm run build:flow",
