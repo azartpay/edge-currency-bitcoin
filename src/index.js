@@ -8,6 +8,7 @@ import { bitcoingold } from './info/bitcoingold'
 import { bitcoingoldTestnet } from './info/bitcoingoldtestnet'
 import { litecoin } from './info/litecoin'
 import { dash } from './info/dash'
+import { azart } from './info/azart'
 import { digibyte } from './info/digibyte'
 import { dogecoin } from './info/dogecoin'
 import { feathercoin } from './info/feathercoin'
@@ -35,6 +36,7 @@ export const bitcoingoldTestnetCurrencyPluginFactory = makeCurrencyPluginFactory
 )
 export const litecoinCurrencyPluginFactory = makeCurrencyPluginFactory(litecoin)
 export const dashCurrencyPluginFactory = makeCurrencyPluginFactory(dash)
+export const azartCurrencyPluginFactory = makeCurrencyPluginFactory(azart)
 export const digibyteCurrencyPluginFactory = makeCurrencyPluginFactory(digibyte)
 export const dogecoinCurrencyPluginFactory = makeCurrencyPluginFactory(dogecoin)
 export const feathercoinCurrencyPluginFactory = makeCurrencyPluginFactory(
