@@ -19,7 +19,7 @@
   "module": "./lib/index.es.js",
   "repository": {
     "type": "git",
-    "url": "git@github.com:Airbitz/edge-currency-bitcoin.git"
+    "url": "git://github.com/EdgeApp/edge-currency-bitcoin.git"
   },
   "scripts": {
     "build": "rollup -c && flow-copy-source src lib && npm run build:flow",
@@ -37,7 +37,7 @@
     "updot": "updot"
   },
   "dependencies": {
-    "bcoin": "git+https://github.com/Airbitz/bcoin.git#primitiveBuild",
+    "bcoin": "git://github.com/EdgeApp/bcoin.git",
     "biggystring": "3.0.2",
     "bn.js": "^4.11.8",
     "buffer": "^5.2.1",
